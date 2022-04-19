@@ -1,4 +1,154 @@
 from tkinter import *
+from tkinter import messagebox
+
+# Variables 
+invDough = 0.0
+invSauce = 0.0
+invCheese = 0.0
+invPepperoni = 0.0
+fdSales = 0.0
+fdExpenses = 0.0
+
+# Define collections
+cheesePizza = list()
+pepperoniPizza = list()
+
+# Function to update inventory outputs
+def fnUpdateInventoryOutput():
+    lblDoughOutput.config(text=invDough)
+    lblSauceOutput.config(text=invSauce)
+    lblCheeseOutput.config(text=invCheese)
+    lblPepperoniOutput.config(text=invPepperoni)
+
+# Function to update financial data 
+def fnUpdateFinancialData():
+    lblSales.config(text=fdSales)
+    lblExpenses.config(text=fdExpenses)
+    lblProfits.config(text=fdSales-fdExpenses)
+
+# Function to add dough to inventory
+def fnAddDough():
+    global invDough, fdExpenses
+    invDough += 100
+    fdExpenses += 20
+    fnUpdateInventoryOutput()
+    fnUpdateFinancialData()
+
+# Function to add sauce to inventory
+def fnAddSauce():
+    global invSauce, fdExpenses
+    invSauce += 100
+    fdExpenses += 10
+    fnUpdateInventoryOutput()
+    fnUpdateFinancialData()
+
+# Function to add cheese to inventory
+def fnAddCheese():
+    global invCheese, fdExpenses
+    invCheese += 100
+    fdExpenses += 25
+    fnUpdateInventoryOutput()
+    fnUpdateFinancialData()
+
+# Function to add pepperoni to inventory
+def fnAddPepperoni():
+    global invPepperoni, fdExpenses
+    invPepperoni += 100
+    fdExpenses += 40
+    fnUpdateInventoryOutput()
+    fnUpdateFinancialData()
+
+# Execute add to inventory button
+def cmdAddtoInventory():
+    print("Add to Inventory was called")
+    if varDough.get() == 1:
+        print("Add Dough was checked")
+        fnAddDough()
+    if varSauce.get() == 1:
+        print("Add Sauce was checked")
+        fnAddSauce()
+    if varCheese.get() == 1:
+        print("Add Cheese was checked")
+        fnAddCheese()
+    if varPepperoni.get() == 1:
+        print("Add Pepperoni was checked")
+        fnAddPepperoni()
+    
+# Function to add order to review order
+def cmdAddtoOrder():
+    print("Add to Order was called")
+    try:
+        quantity = int(entQuantity.get())
+        print("Quantity Data Type: ", type(quantity))
+        print("Quantity entered: " + str(quantity))
+        if quantity < 1:
+            messagebox.showerror("Error", "Quantity must be greater than 0. Please try again.")
+    except ValueError:
+        messagebox.showerror("Error", "Invalid entry. Please enter a valid numeric quantity.")
+    else:
+        if selection.get() == 0 and quantity >= 1:
+            print("Cheese Pizza was selected")
+            lstReviewOrder.insert(END, str(quantity) + " Cheese Pizza(s)")
+            cheesePizza.append(quantity)
+        if selection.get() == 1 and quantity >= 1:
+            print("Pepperoni Pizza was selected")
+            lstReviewOrder.insert(END, str(quantity) + " Pepperoni Pizza(s)")
+            pepperoniPizza.append(quantity)
+        print("Cheese Pizzas: ", cheesePizza)
+        print("Pepperoni Pizzas: ", pepperoniPizza)
+
+# Function to execute place order
+def cmdPlaceOrder():
+    print("Place Order was called")
+    global invDough, invSauce, invCheese, invPepperoni, fdSales
+    sumCheesePizza = sum(cheesePizza)
+    print("Total Cheese Pizzas Ordered: ", sumCheesePizza)
+    sumPepperoniPizza = sum(pepperoniPizza)
+    print("Total Pepperoni Pizzas Ordered: ", sumPepperoniPizza)
+    qty = sumCheesePizza + sumPepperoniPizza
+    print("Total number of pizzas ordered: ", qty)
+    
+    # Update Inventory for Pizzas
+    invDough -= 6 * qty
+    print("Dough: ", invDough)
+    invSauce -= 7 * qty
+    print("Sauce: ", invSauce)
+    invCheese -= 16 * qty
+    print("Cheese: ", invCheese)
+    invPepperoni -= 4 * sumPepperoniPizza
+    print("Pepperoni: ", invPepperoni)
+    # Update Sales for Pizzas
+    fdSales += 15 * qty
+    print("Sales: ", fdSales)
+
+    # Determine if there is enough inventory for number of pizzas ordered
+    if invDough >= 0 and invSauce >= 0 and invCheese >= 0 and invPepperoni >= 0:
+        fnUpdateInventoryOutput()
+        fnUpdateFinancialData()
+        messagebox.showinfo("Confirmation", "Order has been placed.")
+    else:
+        messagebox.showerror("Error", "Insufficent inventory to complete order.")
+        invDough += 6 * qty
+        print("Dough: ", invDough)
+        invSauce += 7 * qty
+        print("Sauce: ", invSauce)
+        invCheese += 16 * qty
+        print("Cheese: ", invCheese)
+        invPepperoni += 4 * sumPepperoniPizza
+        print("Pepperoni: ", invPepperoni)
+        fdSales -= 15 * qty
+        print("Sales: ", fdSales)
+    # Reset the listbox and quantities 
+    cmdCancelOrder()
+
+# Function to execute cancel order
+def cmdCancelOrder():
+    print("Cancel Order was called")
+    lstReviewOrder.delete(0, END)
+    cheesePizza.clear()
+    print("Cheese Pizzas: ", cheesePizza)
+    pepperoniPizza.clear()
+    print("Pepperoni Pizzas: ", pepperoniPizza)
 
 # Create the window
 root = Tk()
@@ -46,7 +196,7 @@ chkPepperoni = Checkbutton(root, text="Add Pepperoni", variable=varPepperoni)
 chkPepperoni.grid(row=4, column=2, sticky=W, padx=30)
 
 # Create add to inventory button
-btnAddInv = Button(root, text="Add To Inventory")
+btnAddInv = Button(root, text="Add To Inventory", command=cmdAddtoInventory)
 btnAddInv.grid(row=5, column=2, sticky=W, padx=30)
 
 #Labels for Order form (column 3)
@@ -66,7 +216,7 @@ rdPepperoni = Radiobutton(root, text="Cheese & Pepperoni Pizza", variable=select
 rdPepperoni.grid(row=3, column=3, columnspan=2, sticky=W)
 
 # Add to order, order form button
-btnAddOrder = Button(root, text="Add To Order")
+btnAddOrder = Button(root, text="Add To Order", command=cmdAddtoOrder)
 btnAddOrder.grid(row=4, column=3, columnspan=2, sticky=W)
 
 # Review order label
@@ -86,10 +236,10 @@ lstReviewOrder.grid(row=0, column=0)
 scrReviewOrder.config(command=lstReviewOrder.yview)
 
 # Order review buttons
-btnPlace = Button(root, text="Place Order")
+btnPlace = Button(root, text="Place Order", command=cmdPlaceOrder)
 btnPlace.grid(row=8, column=3, sticky=W)
 
-btnCancel = Button(root, text="Cancel Order")
+btnCancel = Button(root, text="Cancel Order", command=cmdCancelOrder)
 btnCancel.grid(row=8, column=4, sticky=W, padx=30)
 
 # Financial Data Column Labels
