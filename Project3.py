@@ -1,5 +1,7 @@
 from tkinter import *
 from tkinter import messagebox
+import sqlite3
+
 
 # Variables 
 invDough = 0.0
@@ -12,6 +14,36 @@ fdExpenses = 0.0
 # Define collections
 cheesePizza = list()
 pepperoniPizza = list()
+
+
+def fnOpenDatabase():
+    global conn
+    dbFile = "project3/P3DB - Template.db"
+    conn = sqlite3.connect(dbFile)
+
+    #Adding test query to ensure db is wokring
+    #Create cursor
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM orders;")
+    orders = cur.fetchall()
+    print("Esuring our DB can connect to orders")
+    print(orders)
+
+    cur = conn.cursor()
+    cur = cur.execute("SELECT * FROM finances;")
+    finances = cur.fetchall()
+    print("Esuring our DB can connect to finances")
+    print(finances)
+
+    cur = conn.cursor()
+    cur = cur.execute("SELECT * FROM inventory;")
+    inventory = cur.fetchall()
+    print("Esuring our DB can connect to inventory")
+    print(inventory)
+
+
+
+
 
 # Function to update inventory outputs
 def fnUpdateInventoryOutput():
@@ -289,5 +321,6 @@ lstOrderDetails.grid(row=0, column=0)
 scrOrderDetails.config(command=lstOrderDetails.yview)
 
 # Display window
+fnOpenDatabase()
 root.mainloop()
 
