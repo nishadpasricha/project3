@@ -7,6 +7,7 @@ conn = None
 
 
 def fnOpenDatabase():
+    global conn
     dbFile = "project3/P3DB - Template.db"
     conn = sqlite3.connect(dbFile)
     cur = conn.cursor()
@@ -31,65 +32,89 @@ pepperoniPizza = list()
 
 # Function to update inventory outputs
 def fnUpdateInventoryOutput():
+    global conn
+    sqlDough = "SELECT SUM(dough) FROM inventory;"
+    cur = conn.cursor()
+    cur.execute(sqlDough)
+    invDough = cur.fetchall()
+    print(invDough)
     lblDoughOutput.config(text=invDough)
+    sqlSauce = "SELECT SUM(sauce) FROM inventory;"
+    cur = conn.cursor()
+    cur.execute(sqlSauce)
+    invSauce = cur.fetchall()
+    print(invSauce)
     lblSauceOutput.config(text=invSauce)
+    sqlCheese = "SELECT SUM(cheese) FROM inventory;"
+    cur = conn.cursor()
+    cur.execute(sqlCheese)
+    invCheese = cur.fetchall()
+    print(invCheese)
     lblCheeseOutput.config(text=invCheese)
+    sqlPepperoni = "SELECT SUM(pepperoni) FROM inventory;"
+    cur = conn.cursor()
+    cur.execute(sqlPepperoni)
+    invPepperoni = cur.fetchall()
+    print(invPepperoni)
     lblPepperoniOutput.config(text=invPepperoni)
 
 # Function to update financial data 
 def fnUpdateFinancialData():
+    global conn
+    sqlSales = "SELECT SUM(sales) FROM finances;"
+    cur = conn.cursor()
+    cur.execute(sqlSales)
+    records = cur.fetchall()
+    for x in records:
+        fdSales = float(x[0])
+    print(fdSales)
     lblSales.config(text=fdSales)
+    sqlExpenses = "SELECT SUM(expenses) FROM finances;"
+    cur = conn.cursor()
+    cur.execute(sqlExpenses)
+    records = cur.fetchall()
+    for x in records:
+        fdExpenses = float(x[0])
+    print(fdExpenses)
     lblExpenses.config(text=fdExpenses)
     lblProfits.config(text=fdSales-fdExpenses)
 
-# Function to add dough to inventory
-def fnAddDough():
-    global invDough, fdExpenses
-    invDough += 100
-    fdExpenses += 20
-    fnUpdateInventoryOutput()
-    fnUpdateFinancialData()
-
-# Function to add sauce to inventory
-def fnAddSauce():
-    global invSauce, fdExpenses
-    invSauce += 100
-    fdExpenses += 10
-    fnUpdateInventoryOutput()
-    fnUpdateFinancialData()
-
-# Function to add cheese to inventory
-def fnAddCheese():
-    global invCheese, fdExpenses
-    invCheese += 100
-    fdExpenses += 25
-    fnUpdateInventoryOutput()
-    fnUpdateFinancialData()
-
-# Function to add pepperoni to inventory
-def fnAddPepperoni():
-    global invPepperoni, fdExpenses
-    invPepperoni += 100
-    fdExpenses += 40
-    fnUpdateInventoryOutput()
-    fnUpdateFinancialData()
-
 # Execute add to inventory button
 def cmdAddtoInventory():
+    global conn
     print("Add to Inventory was called")
     if varDough.get() == 1:
         print("Add Dough was checked")
-        fnAddDough()
+        cur = conn.cursor()
+        cur.execute("INSERT INTO inventory (dough) VALUES (100);")
+        conn.commit()
+        cur.execute("INSERT INTO finances (expenses) VALUES (20);")
+        conn.commit()
+        
     if varSauce.get() == 1:
         print("Add Sauce was checked")
-        fnAddSauce()
+        cur = conn.cursor()
+        cur.execute("INSERT INTO inventory (sauce) VALUES (100);")
+        conn.commit()
+        cur.execute("INSERT INTO finances (expenses) VALUES (10);")
+        conn.commit()
+        
     if varCheese.get() == 1:
         print("Add Cheese was checked")
-        fnAddCheese()
+        cur = conn.cursor()
+        cur.execute("INSERT INTO inventory (cheese) VALUES (100);")
+        conn.commit()
+        cur.execute("INSERT INTO finances (expenses) VALUES (25);")
+        conn.commit()
     if varPepperoni.get() == 1:
         print("Add Pepperoni was checked")
-        fnAddPepperoni()
-    
+        cur = conn.cursor()
+        cur.execute("INSERT INTO inventory (pepperoni) VALUES (100);")
+        conn.commit()
+        cur.execute("INSERT INTO finances (expenses) VALUES (40);")
+        conn.commit()
+    fnUpdateInventoryOutput()
+    fnUpdateFinancialData()
 # Function to add order to review order
 def cmdAddtoOrder():
     print("Add to Order was called")
@@ -307,5 +332,7 @@ scrOrderDetails.config(command=lstOrderDetails.yview)
 # Display window
 
 fnOpenDatabase()
+fnUpdateInventoryOutput()
+fnUpdateFinancialData()
 root.mainloop()
 
