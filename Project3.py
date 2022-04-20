@@ -26,35 +26,50 @@ invPepperoni = 0.0
 fdSales = 0.0
 fdExpenses = 0.0
 
+needDough = 0.0
+needSauce = 0.0
+needCheese = 0.0
+needPepperoni = 0.0
+needSales = 0.0
+
+
 # Define collections
 cheesePizza = list()
 pepperoniPizza = list()
 
 # Function to update inventory outputs
 def fnUpdateInventoryOutput():
-    global conn
+    global conn, invDough, invCheese, invPepperoni, invSauce
     sqlDough = "SELECT SUM(dough) FROM inventory;"
     cur = conn.cursor()
     cur.execute(sqlDough)
     invDough = cur.fetchall()
+    for x in invDough:
+        invDough = float(x[0])
     print(invDough)
     lblDoughOutput.config(text=invDough)
     sqlSauce = "SELECT SUM(sauce) FROM inventory;"
     cur = conn.cursor()
     cur.execute(sqlSauce)
     invSauce = cur.fetchall()
+    for x in invSauce:
+        invSauce = float(x[0])
     print(invSauce)
     lblSauceOutput.config(text=invSauce)
     sqlCheese = "SELECT SUM(cheese) FROM inventory;"
     cur = conn.cursor()
     cur.execute(sqlCheese)
     invCheese = cur.fetchall()
+    for x in invCheese:
+        invCheese = float(x[0])
     print(invCheese)
     lblCheeseOutput.config(text=invCheese)
     sqlPepperoni = "SELECT SUM(pepperoni) FROM inventory;"
     cur = conn.cursor()
     cur.execute(sqlPepperoni)
     invPepperoni = cur.fetchall()
+    for x in invPepperoni:
+        invPepperoni = float(x[0])
     print(invPepperoni)
     lblPepperoniOutput.config(text=invPepperoni)
 
@@ -81,7 +96,7 @@ def fnUpdateFinancialData():
 
 # Execute add to inventory button
 def cmdAddtoInventory():
-    global conn
+    global conn, invDough, invSauce, invCheese, invPepperoni
     print("Add to Inventory was called")
     if varDough.get() == 1:
         print("Add Dough was checked")
@@ -116,69 +131,55 @@ def cmdAddtoInventory():
     fnUpdateInventoryOutput()
     fnUpdateFinancialData()
 # Function to add order to review order
-def cmdAddtoOrder():
-    print("Add to Order was called")
+
+def fnAddToOrder():
+    global needDough, needSauce, needCheese, needPepperoni, needSales
     try:
-        quantity = int(entQuantity.get())
-        print("Quantity Data Type: ", type(quantity))
-        print("Quantity entered: " + str(quantity))
-        if quantity < 1:
-            messagebox.showerror("Error", "Quantity must be greater than 0. Please try again.")
-    except ValueError:
-        messagebox.showerror("Error", "Invalid entry. Please enter a valid numeric quantity.")
-    else:
-        if selection.get() == 0 and quantity >= 1:
-            print("Cheese Pizza was selected")
-            lstReviewOrder.insert(END, str(quantity) + " Cheese Pizza(s)")
-            cheesePizza.append(quantity)
-        if selection.get() == 1 and quantity >= 1:
-            print("Pepperoni Pizza was selected")
-            lstReviewOrder.insert(END, str(quantity) + " Pepperoni Pizza(s)")
-            pepperoniPizza.append(quantity)
-        print("Cheese Pizzas: ", cheesePizza)
-        print("Pepperoni Pizzas: ", pepperoniPizza)
+        qty = float(entQuantity.get())
+        needDough += qty * 6
+        needSauce += qty * 7
+        needCheese += qty * 16
+        print(needDough,needSauce,needCheese)
+        print(invDough,invCheese,invSauce,invPepperoni)
+        if pizzaType.get() == 1:
+            needPepperoni += qty * 4
+            lstReviewOrder.insert(END, str(qty) + " Pepperoni Pizza(s)")
+        else:
+            lstReviewOrder.insert(END, str(qty) + " Cheese Pizza(s)")
+        needSales += qty * 15
+    except:
+        messagebox.showerror("Input Error", "The quantity must be a number.")
 
 # Function to execute place order
 def cmdPlaceOrder():
     print("Place Order was called")
-    global invDough, invSauce, invCheese, invPepperoni, fdSales
-    sumCheesePizza = sum(cheesePizza)
-    print("Total Cheese Pizzas Ordered: ", sumCheesePizza)
-    sumPepperoniPizza = sum(pepperoniPizza)
-    print("Total Pepperoni Pizzas Ordered: ", sumPepperoniPizza)
-    qty = sumCheesePizza + sumPepperoniPizza
-    print("Total number of pizzas ordered: ", qty)
+    global conn, invDough, invSauce, invCheese, invPepperoni, needDough, needCheese, needSauce, needPepperoni
+    print(type(invDough))
     
-    # Update Inventory for Pizzas
-    invDough -= 6 * qty
-    print("Dough: ", invDough)
-    invSauce -= 7 * qty
-    print("Sauce: ", invSauce)
-    invCheese -= 16 * qty
-    print("Cheese: ", invCheese)
-    invPepperoni -= 4 * sumPepperoniPizza
-    print("Pepperoni: ", invPepperoni)
-    # Update Sales for Pizzas
-    fdSales += 15 * qty
-    print("Sales: ", fdSales)
-
+    
     # Determine if there is enough inventory for number of pizzas ordered
-    if invDough >= 0 and invSauce >= 0 and invCheese >= 0 and invPepperoni >= 0:
+    if invDough >= needDough and invSauce >= needSauce and invCheese >= needCheese and invPepperoni >= needPepperoni:
+        needSauce = needSauce * -1
+        cur = conn.cursor()
+        cur.execute("INSERT INTO inventory (sauce) VALUES ('" + str(needSauce) + "');")
+        conn.commit()
+        needCheese = needCheese * -1
+        cur = conn.cursor()
+        cur.execute("INSERT INTO inventory (cheese) VALUES ('" + str(needCheese) + "');")
+        conn.commit()
+        needDough = needDough *-1
+        cur = conn.cursor()
+        cur.execute("INSERT INTO inventory (dough) VALUES ('" + str(needDough) + "');")
+        conn.commit()
+        needPepperoni = needPepperoni *-1
+        cur = conn.cursor()
+        cur.execute("INSERT INTO inventory (pepperoni) VALUES ('" + str(needPepperoni) + "');")
+        conn.commit()
         fnUpdateInventoryOutput()
         fnUpdateFinancialData()
         messagebox.showinfo("Confirmation", "Order has been placed.")
     else:
         messagebox.showerror("Error", "Insufficent inventory to complete order.")
-        invDough += 6 * qty
-        print("Dough: ", invDough)
-        invSauce += 7 * qty
-        print("Sauce: ", invSauce)
-        invCheese += 16 * qty
-        print("Cheese: ", invCheese)
-        invPepperoni += 4 * sumPepperoniPizza
-        print("Pepperoni: ", invPepperoni)
-        fdSales -= 15 * qty
-        print("Sales: ", fdSales)
     # Reset the listbox and quantities 
     cmdCancelOrder()
 
@@ -249,15 +250,15 @@ entQuantity = Entry(root)
 entQuantity.grid(row=1, column=4, sticky=W)
 
 # Radio buttons for order form
-selection = IntVar()
-rdCheese = Radiobutton(root, text="Cheese Pizza", variable=selection, value=0)
+pizzaType = IntVar()
+rdCheese = Radiobutton(root, text="Cheese Pizza", variable=pizzaType, value=0)
 rdCheese.grid(row=2, column=3, columnspan=2, sticky=W)
 rdCheese.select()
-rdPepperoni = Radiobutton(root, text="Cheese & Pepperoni Pizza", variable=selection, value=1)
+rdPepperoni = Radiobutton(root, text="Cheese & Pepperoni Pizza", variable=pizzaType, value=1)
 rdPepperoni.grid(row=3, column=3, columnspan=2, sticky=W)
 
 # Add to order, order form button
-btnAddOrder = Button(root, text="Add To Order", command=cmdAddtoOrder)
+btnAddOrder = Button(root, text="Add To Order", command=fnAddToOrder)
 btnAddOrder.grid(row=4, column=3, columnspan=2, sticky=W)
 
 # Review order label
