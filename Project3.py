@@ -144,16 +144,17 @@ def fnAddToOrder():
         if pizzaType.get() == 1:
             needPepperoni += qty * 4
             lstReviewOrder.insert(END, str(qty) + " Pepperoni Pizza(s)")
+            needSales =+ qty * 15
         else:
             lstReviewOrder.insert(END, str(qty) + " Cheese Pizza(s)")
-        needSales += qty * 15
+            needSales += qty * 15
     except:
         messagebox.showerror("Input Error", "The quantity must be a number.")
 
 # Function to execute place order
 def cmdPlaceOrder():
     print("Place Order was called")
-    global conn, invDough, invSauce, invCheese, invPepperoni, needDough, needCheese, needSauce, needPepperoni
+    global conn, invDough, invSauce, invCheese, invPepperoni, needDough, needCheese, needSauce, needPepperoni, needSales
     print(type(invDough))
     
     
@@ -175,9 +176,17 @@ def cmdPlaceOrder():
         cur = conn.cursor()
         cur.execute("INSERT INTO inventory (pepperoni) VALUES ('" + str(needPepperoni) + "');")
         conn.commit()
+        #Insert Sales
+        cur = conn.cursor()
+        cur.execute("INSERT INTO finances (sales) VALUES ('" + str(needSales)+ "');")
+        conn.commit()
         fnUpdateInventoryOutput()
         fnUpdateFinancialData()
         messagebox.showinfo("Confirmation", "Order has been placed.")
+        #SQL to place line items into orders
+
+
+
     else:
         messagebox.showerror("Error", "Insufficent inventory to complete order.")
     # Reset the listbox and quantities 
