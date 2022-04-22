@@ -1,10 +1,11 @@
 from tkinter import *
 from tkinter import messagebox
+import time
 
 import sqlite3
 
 conn = None
-
+orderNumber = 0
 
 def fnOpenDatabase():
     global conn
@@ -154,7 +155,7 @@ def fnAddToOrder():
 # Function to execute place order
 def cmdPlaceOrder():
     print("Place Order was called")
-    global conn, invDough, invSauce, invCheese, invPepperoni, needDough, needCheese, needSauce, needPepperoni, needSales
+    global conn, invDough, invSauce, invCheese, invPepperoni, needDough, needCheese, needSauce, needPepperoni, needSales, orderNumber
     print(type(invDough))
     
     
@@ -183,14 +184,41 @@ def cmdPlaceOrder():
         fnUpdateInventoryOutput()
         fnUpdateFinancialData()
         messagebox.showinfo("Confirmation", "Order has been placed.")
+        
+        #get last order number
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM orders;")
+        records = cur.fetchone()
+        if records == None:
+            orderNumber = 1
+        else:
+            conn.cursor()
+            cur.execute("SELECT orderNumber from orders ORDER BY ID DESC LIMIT 1")
+            records = cur.fetchall()
+            for x in records:
+                orderNumber = int(x[0])
+            print(orderNumber)
+            orderNumber = orderNumber + 1
+
+        
         #SQL to place line items into orders
-
-
+        for i in lstReviewOrder.get(0,END):
+            orderNumber =  str(orderNumber)
+            #sql = "INSERT INTO orders (orderNumber, lineItemText) VALUES ('" + orderNumber + "," + i + "');"
+            lineItems = (orderNumber, i)
+            cur = conn.cursor()
+            cur.execute("INSERT INTO orders (orderNumber, lineItemText) VALUES (?, ?)", lineItems)
+            conn.commit()
 
     else:
         messagebox.showerror("Error", "Insufficent inventory to complete order.")
     # Reset the listbox and quantities 
     cmdCancelOrder()
+    time.sleep(1)
+    fnUpdatePastOrders()
+
+    
+    
 
 # Function to execute cancel order
 def cmdCancelOrder():
@@ -200,6 +228,31 @@ def cmdCancelOrder():
     print("Cheese Pizzas: ", cheesePizza)
     pepperoniPizza.clear()
     print("Pepperoni Pizzas: ", pepperoniPizza)
+
+def fnUpdatePastOrders():
+    global conn
+    cur = conn.cursor()
+    cur.execute("SELECT DISTINCT orderNumber FROM orders;")
+    records = cur.fetchall()
+
+    lstPastOrders.delete(0,END)
+    for record in records:
+        lstPastOrders.insert(END,record[0])
+
+    
+def fnGetOrderDetails():
+    global conn
+    selectedId = lstPastOrders.curselection()[0]
+    selectedId = str(selectedId)
+    cur = conn.cursor()
+    cur.execute("SELECT lineItemText FROM orders WHERE orderNumber = '" + selectedId + "';")
+    records = cur.fetchall()
+    lstOrderDetails.delete(0,END)
+    for record in records:
+        lstOrderDetails.insert(END,record[0])
+    
+
+
 
 # Create the window
 root = Tk()
@@ -325,7 +378,7 @@ lstPastOrders = Listbox(frmPastOrders, height=6, width=30, yscrollcommand=scrPas
 lstPastOrders.grid(row=0, column=0)
 scrPastOrders.config(command=lstPastOrders.yview)
 
-btnOrderDetails = Button(root, text="Show Order Details")
+btnOrderDetails = Button(root, text="Show Order Details", command = fnGetOrderDetails)
 btnOrderDetails.grid(row=12, column=0, columnspan=3, sticky=W, padx=60)
 
 # Past order details header and listbox
@@ -342,6 +395,7 @@ scrOrderDetails.config(command=lstOrderDetails.yview)
 # Display window
 
 fnOpenDatabase()
+fnUpdatePastOrders()
 fnUpdateInventoryOutput()
 fnUpdateFinancialData()
 root.mainloop()
