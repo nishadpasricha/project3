@@ -239,7 +239,7 @@ def fnUpdatePastOrders():
     for record in records:
         lstPastOrders.insert(END,record[0])
 
-    
+#only issue is getting the correct selected file
 def fnGetOrderDetails():
     global conn
     selectedId = lstPastOrders.curselection()[0]
