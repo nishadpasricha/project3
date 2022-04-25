@@ -145,7 +145,7 @@ def fnAddToOrder():
         if pizzaType.get() == 1:
             needPepperoni += qty * 4
             lstReviewOrder.insert(END, str(qty) + " Pepperoni Pizza(s)")
-            needSales =+ qty * 15
+            needSales += qty * 15
         else:
             lstReviewOrder.insert(END, str(qty) + " Cheese Pizza(s)")
             needSales += qty * 15
@@ -243,6 +243,7 @@ def fnUpdatePastOrders():
 def fnGetOrderDetails():
     global conn
     selectedId = lstPastOrders.curselection()[0]
+    selectedId = selectedId + 1
     selectedId = str(selectedId)
     cur = conn.cursor()
     cur.execute("SELECT lineItemText FROM orders WHERE orderNumber = '" + selectedId + "';")
